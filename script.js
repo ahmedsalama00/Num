@@ -187,7 +187,7 @@ function solveBisection(){
       c=(a+b)/2;fc=f(c);
       rows.push([it+1,fmt(a,6),fmt(b,6),fmt(c,8),fmt(fc,8),fmt(Math.abs(b-c),8)]);
       if(Math.abs(b-c)<eps||Math.abs(fc)<eps)break;
-      if(fa*fc<0){ b=c; } else { a=c; fa=fc; }
+      if(fa*fc<0)b=c;else a=c;
       it++;
     }
     showResult('bis-result',resultBox(`x ≈ ${fmt(c,8)}`,'Root found',`<div class="status-row"><div class="dot"></div><span>Converged in ${it+1} iterations. Min needed: ${Math.ceil(minN)}</span></div>`)+makeTable(['n','a','b','c=(a+b)/2','f(c)','|b-c|'],rows));
