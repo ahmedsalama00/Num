@@ -210,12 +210,7 @@ body{font-family:'Sora',sans-serif;background:var(--bg);color:var(--text);min-he
 .chat-input { flex: 1; padding: 10px; border: 1px solid var(--border2); border-radius: 20px; background: var(--surface2); color: var(--text); outline: none; }
 .chat-send-btn { background: #4f8ef7; color: white; border: none; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; }
 
-#pdf-hidden-container { position: absolute; left: 0; top: 0; z-index: 9999; width: 800px; background: white; color: black; padding: 40px; font-family: 'Times New Roman', serif; }
-.pdf-header { text-align: center; border-bottom: 2px solid #222; padding-bottom: 15px; margin-bottom: 25px; }
-.pdf-content h2 { color: #222; border-bottom: 1px solid #ccc; padding-bottom: 5px; margin-top: 25px; }
-.pdf-content table { width: 100%; border-collapse: collapse; margin: 15px 0; }
-.pdf-content th, .pdf-content td { border: 1px solid #aaa; padding: 8px; text-align: center; }
-.pdf-content th { background: #f5f5f5; }
+
 </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
@@ -3138,19 +3133,96 @@ Return ONLY valid HTML inside the pdf-content div. Do not include markdown \`\`\
     
     // Inject beautiful academic styling for the PDF
     const styleBlock = `
-      <style>
-        .pdf-container { padding: 40px 60px; font-family: 'Times New Roman', serif; color: #000; background: #fff; width: 800px; box-sizing: border-box; }
-        .pdf-header { text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 30px; }
-        .pdf-header h1 { font-size: 28px; margin: 0 0 5px 0; font-weight: normal; font-family: 'Arial', sans-serif; }
-        .pdf-header p { font-size: 16px; margin: 0; color: #555; font-style: italic; }
-        .pdf-content { text-align: justify; line-height: 1.6; font-size: 16px; }
-        .pdf-content h2, .pdf-content h3 { font-family: 'Arial', sans-serif; color: #111; margin-top: 25px; margin-bottom: 15px; border-bottom: 1px solid #ddd; padding-bottom: 5px; }
-        .pdf-content p { margin-bottom: 15px; }
-        .pdf-content table { width: 100%; border-collapse: collapse; margin: 25px 0; font-size: 14px; page-break-inside: avoid; }
-        .pdf-content th, .pdf-content td { border: 1px solid #000; padding: 10px; text-align: center; }
-        .pdf-content th { background-color: #f7f7f7; font-weight: bold; }
-        .katex-display { margin: 15px 0; page-break-inside: avoid; }
-      </style>
+<style>
+.pdf-container{
+    padding:50px 60px 50px 90px; /* Safer left padding to prevent text clipping */
+    font-family:'Times New Roman',serif;
+    color:#000;
+    background:#fff;
+
+    width:210mm;
+min-height:297mm;
+
+    box-sizing:border-box;
+}
+
+.pdf-header{
+    text-align:center;
+    border-bottom:2px solid #000;
+    padding-bottom:10px;
+    margin-bottom:30px;
+}
+
+.pdf-header h1{
+    font-size:28px;
+    margin:0 0 5px 0;
+    font-family:'Arial',sans-serif;
+}
+
+.pdf-header p{
+    font-size:16px;
+    color:#555;
+    font-style:italic;
+}
+
+.pdf-content{
+    text-align:justify;
+    line-height:1.8;
+    font-size:16px;
+
+    word-wrap:break-word;
+    overflow-wrap:break-word;
+    word-break:normal;
+}
+
+.pdf-content h2,
+.pdf-content h3{
+    font-family:'Arial',sans-serif;
+    margin-top:25px;
+    margin-bottom:15px;
+    border-bottom:1px solid #ddd;
+    padding-bottom:5px;
+    page-break-inside:avoid;
+    page-break-after:avoid;
+}
+
+.pdf-content p,
+.pdf-content ul,
+.pdf-content ol,
+.pdf-content li{
+    margin-bottom:15px;
+    page-break-inside:avoid;
+}
+
+.pdf-content table{
+    width:100%;
+    border-collapse:collapse;
+    table-layout:fixed;
+    margin:25px 0;
+
+    page-break-inside:avoid;
+}
+
+.pdf-content th,
+.pdf-content td{
+    border:1px solid #000;
+    padding:10px;
+    text-align:center;
+
+    word-break:break-word;
+}
+
+.pdf-content th{
+    background:#f7f7f7;
+    font-weight:bold;
+}
+
+.katex-display{
+    margin:15px 0;
+    page-break-inside:avoid;
+    overflow-x:auto;
+}
+</style>
     `;
 
     const tempContainer = document.createElement('div');
@@ -3159,10 +3231,14 @@ Return ONLY valid HTML inside the pdf-content div. Do not include markdown \`\`\
     
     // Create a wrapper to enforce width for html2canvas and attach to DOM to fix KaTeX bounding boxes
     const wrapper = document.createElement('div');
-    wrapper.style.position = 'absolute';
-    wrapper.style.left = '-9999px';
+    wrapper.style.position = 'fixed'; // Prevents body margin or scroll offsets
     wrapper.style.top = '0';
-    wrapper.style.width = '800px';
+    wrapper.style.left = '0';
+    wrapper.style.margin = '0';
+    wrapper.style.padding = '0';
+    wrapper.style.zIndex = '-9999';
+    wrapper.style.visibility = 'hidden';
+    wrapper.style.width = '794px';
     wrapper.style.backgroundColor = '#fff';
     wrapper.appendChild(tempContainer);
     document.body.appendChild(wrapper);
@@ -3180,23 +3256,23 @@ Return ONLY valid HTML inside the pdf-content div. Do not include markdown \`\`\
       });
     }
 
-    // Wait a brief moment for rendering to complete
-    setTimeout(() => {
-      overlay.innerHTML = `<i class="fas fa-file-pdf fa-3x mb-3"></i><h2>Downloading PDF...</h2>`;
-      const opt = {
-        margin:       0,
-        filename:     `Numerical_Report_${method}.pdf`,
-        image:        { type: 'jpeg', quality: 1.0 },
-        html2canvas:  { scale: 2, useCORS: true, windowWidth: 800 },
-        jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' },
-        pagebreak:    { mode: ['avoid-all', 'css', 'legacy'] }
-      };
-      
-      html2pdf().set(opt).from(tempContainer).save().then(() => {
-        document.body.removeChild(overlay);
-        document.body.removeChild(wrapper);
-      });
-    }, 1000);
+    // Wait for rendering to stabilize
+    await new Promise(resolve => setTimeout(resolve, 300));
+    
+    overlay.innerHTML = `<i class="fas fa-file-pdf fa-3x mb-3"></i><h2>Downloading PDF...</h2>`;
+    const opt = {
+      margin:       0, // Zero jsPDF margin; CSS padding handles visual margins perfectly
+      filename:     `Numerical_Report_${method}.pdf`,
+      image:        { type: 'jpeg', quality: 1.0 },
+      html2canvas:  { scale: 2, useCORS: true, backgroundColor: '#ffffff', logging: false, windowWidth: 794, width: 794, x: 0, y: 0 },
+      jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
+      pagebreak:    { mode: ['css', 'legacy'] }
+    };
+    
+    html2pdf().set(opt).from(tempContainer).save().then(() => {
+      document.body.removeChild(overlay);
+      document.body.removeChild(wrapper);
+    });
 
   } catch (e) {
     document.body.removeChild(overlay);
